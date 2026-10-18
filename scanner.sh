@@ -22,8 +22,23 @@ AUTHOR="aryxan"
 GITHUB_URL="https://github.com/aryxan"
 
 # ------------------------------------------------------------------------------
-# UI Helpers: Banner & Headers
+# UI Helpers: Dynamic Uniform Box Alignment
 # ------------------------------------------------------------------------------
+print_box_row() {
+    local text="$1"
+    local color="${2:-$CYAN}"
+    local width="${3:-56}"
+    # Strip ANSI escape codes to calculate visual character length
+    local plain
+    plain=$(echo -e "$text" | sed -r "s/\x1B\[[0-9;]*[a-zA-Z]//g")
+    local len=${#plain}
+    local pad=$((width - len))
+    [ $pad -lt 0 ] && pad=0
+    local spaces
+    spaces=$(printf "%*s" "$pad" "")
+    echo -e "${color}│${NC} ${text}${spaces} ${color}│${NC}"
+}
+
 print_banner() {
     echo -e "${CYAN}${BOLD}"
     cat << "EOF"
@@ -44,17 +59,16 @@ EOF
 show_disclaimer_and_prompt() {
     clear
     print_banner
-    echo -e "${YELLOW}┌──[ DISCLAIMER & WARNING - EDUCATIONAL PURPOSES ONLY ]───────┐${NC}"
-    echo -e "${YELLOW}│${NC}  ${BOLD}WARNING:${NC} This tool is developed strictly for educational and ${YELLOW}│${NC}"
-    echo -e "${YELLOW}│${NC}  authorized security auditing/practice purposes only.         ${YELLOW}│${NC}"
-    echo -e "${YELLOW}│${NC}                                                               ${YELLOW}│${NC}"
-    echo -e "${YELLOW}│${NC}  Scanning targets or networks without prior mutual written    ${YELLOW}│${NC}"
-    echo -e "${YELLOW}│${NC}  consent is strictly illegal. The developer assumes no        ${YELLOW}│${NC}"
-    echo -e "${YELLOW}│${NC}  liability for damages or misuse caused by this tool.         ${YELLOW}│${NC}"
-    echo -e "${YELLOW}│${NC}                                                               ${YELLOW}│${NC}"
-    echo -e "${YELLOW}│${NC}  ${CYAN}Author :${NC} ${BOLD}$AUTHOR${NC}                                    ${YELLOW}│${NC}"
-    echo -e "${YELLOW}│${NC}  ${CYAN}GitHub :${NC} ${DIM}$GITHUB_URL${NC}             ${YELLOW}│${NC}"
-    echo -e "${YELLOW}└─────────────────────────────────────────────────────────────┘${NC}"
+    echo -e "${YELLOW}┌──[ DISCLAIMER & WARNING - EDUCATIONAL PURPOSES ONLY ]────┐${NC}"
+    print_box_row "${BOLD}WARNING:${NC} This tool is strictly for educational and" "$YELLOW" 56
+    print_box_row "authorized security auditing/practice purposes only." "$YELLOW" 56
+    print_box_row "" "$YELLOW" 56
+    print_box_row "Scanning targets or networks without authorization is" "$YELLOW" 56
+    print_box_row "illegal. The author assumes no liability for misuse." "$YELLOW" 56
+    print_box_row "" "$YELLOW" 56
+    print_box_row "${CYAN}Author :${NC} ${BOLD}$AUTHOR${NC}" "$YELLOW" 56
+    print_box_row "${CYAN}GitHub :${NC} ${DIM}$GITHUB_URL${NC}" "$YELLOW" 56
+    echo -e "${YELLOW}└──────────────────────────────────────────────────────────┘${NC}"
     echo ""
 
     if [ -t 0 ]; then
@@ -74,9 +88,9 @@ show_disclaimer_and_prompt() {
 
 print_section() {
     local title="$1"
-    echo -e "\n${CYAN}┌─────────────────────────────────────────────────────────────┐${NC}"
-    printf "${CYAN}│${NC} ${BOLD}%-59s${NC} ${CYAN}│${NC}\n" "$title"
-    echo -e "${CYAN}└─────────────────────────────────────────────────────────────┘${NC}"
+    echo -e "\n${CYAN}┌──────────────────────────────────────────────────────────┐${NC}"
+    print_box_row "${BOLD}$title${NC}" "$CYAN" 56
+    echo -e "${CYAN}└──────────────────────────────────────────────────────────┘${NC}"
 }
 
 print_cmd_box() {
@@ -588,26 +602,26 @@ main_menu() {
         detected_net=$(detect_target)
         [ -z "$detected_net" ] && detected_net="None detected"
 
-        echo -e "${CYAN}┌──[ Session Overview ]────────────────────────────────────────┐${NC}"
-        printf "${CYAN}│${NC}  ${BOLD}%-15s${NC} : ${GREEN}%-40s${NC} ${CYAN}│${NC}\n" "Workspace" "$(basename "$SCAN_DIR")"
-        printf "${CYAN}│${NC}  ${BOLD}%-15s${NC} : %-40s ${CYAN}│${NC}\n" "Path" "$SCAN_DIR"
-        printf "${CYAN}│${NC}  ${BOLD}%-15s${NC} : ${YELLOW}%-40s${NC} ${CYAN}│${NC}\n" "Local Network" "$detected_net"
-        printf "${CYAN}│${NC}  ${BOLD}%-15s${NC} : ${MAGENTA}%-40s${NC} ${CYAN}│${NC}\n" "Live Hosts" "$host_count discovered"
-        echo -e "${CYAN}├─────────────────────────────────────────────────────────────┤${NC}"
-        echo -e "${CYAN}│${NC}  ${BOLD}HOST DISCOVERY${NC}                                             ${CYAN}│${NC}"
-        echo -e "${CYAN}│${NC}   ${CYAN}[1]${NC} Scan Subnet / Network        ${DIM}(e.g. 10.129.2.0/24)${NC}     ${CYAN}│${NC}"
-        echo -e "${CYAN}│${NC}   ${CYAN}[2]${NC} Scan Multiple IPs / Range    ${DIM}(e.g. 10.129.2.18-20)${NC}    ${CYAN}│${NC}"
-        echo -e "${CYAN}│${NC}   ${CYAN}[3]${NC} Scan Targets from File       ${DIM}(-iL <file>)${NC}            ${CYAN}│${NC}"
-        echo -e "${CYAN}│${NC}                                                             ${CYAN}│${NC}"
-        echo -e "${CYAN}│${NC}  ${BOLD}TARGET ENUMERATION${NC}                                         ${CYAN}│${NC}"
-        echo -e "${CYAN}│${NC}   ${CYAN}[4]${NC} Scan Single IP               ${DIM}(Host Discovery & Pings)${NC} ${CYAN}│${NC}"
-        echo -e "${CYAN}│${NC}   ${CYAN}[5]${NC} Detailed OS & Service Scan   ${DIM}(sudo nmap -A <target>)${NC}  ${CYAN}│${NC}"
-        echo -e "${CYAN}│${NC}                                                             ${CYAN}│${NC}"
-        echo -e "${CYAN}│${NC}  ${BOLD}WORKSPACE & CONTROLS${NC}                                       ${CYAN}│${NC}"
-        echo -e "${CYAN}│${NC}   ${CYAN}[6]${NC} View Workspace Files         ${DIM}(Requires Root Password)${NC}${CYAN}│${NC}"
-        echo -e "${CYAN}│${NC}   ${CYAN}[7]${NC} Create or Switch Workspace                          ${CYAN}│${NC}"
-        echo -e "${CYAN}│${NC}   ${CYAN}[0]${NC} Exit                                                    ${CYAN}│${NC}"
-        echo -e "${CYAN}└─────────────────────────────────────────────────────────────┘${NC}"
+        echo -e "${CYAN}┌──[ Session Overview ]────────────────────────────────────┐${NC}"
+        print_box_row "${BOLD}Workspace     :${NC} ${GREEN}$(basename "$SCAN_DIR")${NC}" "$CYAN" 56
+        print_box_row "${BOLD}Directory     :${NC} $SCAN_DIR" "$CYAN" 56
+        print_box_row "${BOLD}Local Network :${NC} ${YELLOW}$detected_net${NC}" "$CYAN" 56
+        print_box_row "${BOLD}Live Hosts    :${NC} ${MAGENTA}$host_count discovered${NC}" "$CYAN" 56
+        echo -e "${CYAN}├──────────────────────────────────────────────────────────┤${NC}"
+        print_box_row "${BOLD}HOST DISCOVERY${NC}" "$CYAN" 56
+        print_box_row " ${CYAN}[1]${NC} Scan Subnet / Network" "$CYAN" 56
+        print_box_row " ${CYAN}[2]${NC} Scan Multiple IPs / Range" "$CYAN" 56
+        print_box_row " ${CYAN}[3]${NC} Scan Targets from File" "$CYAN" 56
+        print_box_row "" "$CYAN" 56
+        print_box_row "${BOLD}TARGET ENUMERATION${NC}" "$CYAN" 56
+        print_box_row " ${CYAN}[4]${NC} Scan Single IP" "$CYAN" 56
+        print_box_row " ${CYAN}[5]${NC} Detailed OS & Service Scan" "$CYAN" 56
+        print_box_row "" "$CYAN" 56
+        print_box_row "${BOLD}WORKSPACE & CONTROLS${NC}" "$CYAN" 56
+        print_box_row " ${CYAN}[6]${NC} View Workspace Files" "$CYAN" 56
+        print_box_row " ${CYAN}[7]${NC} Create or Switch Workspace" "$CYAN" 56
+        print_box_row " ${CYAN}[0]${NC} Exit" "$CYAN" 56
+        echo -e "${CYAN}└──────────────────────────────────────────────────────────┘${NC}"
         echo ""
 
         read -rp "$(echo -e "${YELLOW}[?] Select an option [0-7]: ${NC}")" opt
