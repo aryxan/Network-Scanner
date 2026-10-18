@@ -1,0 +1,6 @@
+# Scans output directory (keeps logs and findings local)
+scans/
+*.nmap
+*.gnmap
+*.xml
+live_hosts.txt
